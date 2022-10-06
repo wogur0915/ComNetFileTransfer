@@ -46,7 +46,7 @@ public:
 //	CString m_stMessage;
 //	CListBox m_ListChat;
 	
-	afx_msg void OnTimer(UINT nIDEvent);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 
 
 public:

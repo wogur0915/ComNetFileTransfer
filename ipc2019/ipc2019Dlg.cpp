@@ -372,7 +372,7 @@ LRESULT Cipc2019Dlg::OnRegAckMsg(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-void Cipc2019Dlg::OnTimer(UINT nIDEvent)
+void Cipc2019Dlg::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO: Add your message handler code here and/or call default
 	m_ListChat.AddString(_T(">> The last message was time-out.."));

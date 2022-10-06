@@ -27,7 +27,7 @@ CFileLayer::~CFileLayer()
 	{
 		//////////////////////// fill the blank ///////////////////////////////
 		//파일 제거
-				CFile::Remove("IpfBuff.txt");
+				CFile::Remove(_T("IpcBuff.txt"));
 		///////////////////////////////////////////////////////////////////////
 	}
 		CATCH(CFileException, e)
