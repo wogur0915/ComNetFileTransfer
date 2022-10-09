@@ -38,7 +38,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -53,7 +53,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -105,6 +105,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>wpcap.lib;packet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>wpcap.dll;packet.dll</DelayLoadDLLs>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -128,6 +129,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <AdditionalDependencies>wpcap.lib;packet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>wpcap.dll;packet.dll</DelayLoadDLLs>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -155,6 +157,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>wpcap.lib;packet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>wpcap.dll;packet.dll</DelayLoadDLLs>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -182,6 +185,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>wpcap.lib;packet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DelayLoadDLLs>wpcap.dll;packet.dll</DelayLoadDLLs>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -197,6 +201,7 @@
   <ItemGroup>
     <ClInclude Include="BaseLayer.h" />
     <ClInclude Include="ChatAppLayer.h" />
+    <ClInclude Include="NILayer.h" />
     <ClInclude Include="FileLayer.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="ipc2019.h" />
@@ -211,6 +216,7 @@
   <ItemGroup>
     <ClCompile Include="BaseLayer.cpp" />
     <ClCompile Include="ChatAppLayer.cpp" />
+    <ClCompile Include="NILayer.cpp" />
     <ClCompile Include="EthernetLayer.cpp" />
     <ClCompile Include="FileLayer.cpp" />
     <ClCompile Include="ipc2019.cpp" />
