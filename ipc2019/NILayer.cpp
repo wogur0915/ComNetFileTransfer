@@ -9,14 +9,15 @@
 
 // Abstraction layer for transmissions over the data link layer
 CNILayer::CNILayer(char* pName)
-	: CBaseLayer(pName)
+	: CBaseLayer(pName), devicesList{}
 {
 	LoadNpcapDlls();
+	PopulateDeviceList();
 }
 
 CNILayer::~CNILayer()
 {
-	
+	pcap_freealldevs(pointerToDeviceList);
 }
 
 // Reference:
@@ -37,6 +38,31 @@ BOOL CNILayer::LoadNpcapDlls()
 		return FALSE;
 	}
 	return TRUE;
+}
+
+// Method called on class initialization to populate the devices list.
+void CNILayer::PopulateDeviceList()
+{
+	char error[PCAP_ERRBUF_SIZE];
+	pcap_if_t* allDevices;
+	if (!pcap_findalldevs(&allDevices, error))
+	{
+		this->pointerToDeviceList = allDevices;
+		for (pcap_if_t* currentDevice = allDevices; currentDevice != nullptr; currentDevice = currentDevice->next)
+		{
+			NetworkDevice device{};
+			device.name = currentDevice->name;
+			device.description = currentDevice->description;
+			devicesList.push_back(device);
+		}
+	}
+	// We don't free the device list here because device_list has references to resources owned by allDevices.
+	// We'll free them in the destructor.
+}
+
+std::vector<CNILayer::NetworkDevice>* CNILayer::GetDevicesList()
+{
+	return &this->devicesList;
 }
 
 BOOL CNILayer::GetMacAddress(char* deviceName, CNILayer::PhysicalAddress* outAddress)

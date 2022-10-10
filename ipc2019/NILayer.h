@@ -20,9 +20,18 @@ public:
 
     BOOL CNILayer::GetMacAddress(char* deviceName, PhysicalAddress* outAddress);
 
+    typedef struct {
+        char* name;
+        char* description;
+    } NetworkDevice;
+
+    std::vector<NetworkDevice>* GetDevicesList();
+
 private:
     BOOL LoadNpcapDlls();
-
+    pcap_if_t* pointerToDeviceList;
+    void PopulateDeviceList();
+    std::vector<NetworkDevice> devicesList;
 
 };
 
