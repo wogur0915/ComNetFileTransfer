@@ -7,9 +7,6 @@
 #include <Packet32.h>
 #pragma comment(lib, "packet.lib")
 
-// Copied from ntddndls.h - "The address of the NIC encoded in the hardware."
-#define OID_802_3_PERMANENT_ADDRESS 0x01010101
-
 // Abstraction layer for transmissions over the data link layer
 CNILayer::CNILayer(char* pName)
 	: CBaseLayer(pName)
@@ -42,6 +39,43 @@ BOOL CNILayer::LoadNpcapDlls()
 	return TRUE;
 }
 
+BOOL CNILayer::GetMacAddress(char* deviceName, CNILayer::PhysicalAddress* outAddress)
+{
+	// Allocate enough space for PACKET_OID_DATA and the physical address on the stack
+	// (PACKET_OID_DATA is a variable length structure)
+	PPACKET_OID_DATA oidData = (PPACKET_OID_DATA)_malloca(sizeof(PACKET_OID_DATA) + 6);
+	if (oidData == nullptr)
+	{
+		// Out of stack space. Don't think we really can proceed much further at this point... but whatever.
+		return false;
+	}
+
+	oidData->Oid = OID_802_3_PERMANENT_ADDRESS;
+	oidData->Length = 6;
+	ZeroMemory(oidData->Data, 6);
+
+	LPADAPTER adapter = PacketOpenAdapter(deviceName);
+	if (adapter == nullptr)
+	{
+		// Either: The device doesn't have an associated physical address.
+		// (Possible if we're querying for virtual devices for loopback capture etc.)
+		// or: The device name is invalid.
+		return false;
+	}
+
+	if (!PacketRequest(adapter, false, oidData))
+	{
+		return false;
+	}
+
+	for (int i = 0; i < 6; i++)
+	{
+		((char*)outAddress)[i] = oidData->Data[i];
+	}
+
+	PacketCloseAdapter(adapter);
+	return true;
+}
 
 // Sends the specified packet over the wire
 BOOL CNILayer::Send(unsigned char* payload, int length)

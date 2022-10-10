@@ -14,8 +14,15 @@ public:
     CNILayer(char* pName);
     virtual ~CNILayer();
 
+    typedef struct {
+        char a, b, c, d, e, f;
+    } PhysicalAddress;
+
+    BOOL CNILayer::GetMacAddress(char* deviceName, PhysicalAddress* outAddress);
+
 private:
     BOOL LoadNpcapDlls();
-    
+
+
 };
 
