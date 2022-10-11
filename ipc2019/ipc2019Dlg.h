@@ -8,6 +8,7 @@
 #include "ChatAppLayer.h"	// Added by ClassView
 #include "EthernetLayer.h"	// Added by ClassView
 #include "FileLayer.h"	// Added by ClassView
+#include "NILayer.h"
 // Cipc2019Dlg 대화 상자
 class Cipc2019Dlg : public CDialogEx, public CBaseLayer
 {
@@ -85,9 +86,12 @@ private:
 public:
 	afx_msg void OnBnClickedButtonAddr();
 	afx_msg void OnBnClickedButtonSend();
-	UINT m_unSrcAddr;
-	UINT m_unDstAddr;
+	CString m_unSrcAddr;
+	CString m_unDstAddr;
 	CString m_stMessage;
 	CListBox m_ListChat;
 	afx_msg void OnBnClickedCheckToall();
+	// The combobox containing available device list
+	CComboBox deviceComboBox;
+	afx_msg void OnCbnSelchangeCombo1();
 };

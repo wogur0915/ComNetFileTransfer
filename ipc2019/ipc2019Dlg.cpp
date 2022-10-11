@@ -58,8 +58,8 @@ Cipc2019Dlg::Cipc2019Dlg(CWnd* pParent /*=nullptr*/)
 	, m_bSendReady(FALSE)
 	, m_nAckReady( -1 )
 
-	, m_unSrcAddr(0)
-	, m_unDstAddr(0)
+	, m_unSrcAddr("")
+	, m_unDstAddr("")
 	, m_stMessage(_T(""))
 {
 	//대화상자 멤버 변수 초기화
@@ -73,11 +73,11 @@ Cipc2019Dlg::Cipc2019Dlg(CWnd* pParent /*=nullptr*/)
 	//Protocol Layer Setting
 	m_LayerMgr.AddLayer(new CChatAppLayer("ChatApp"));
 	m_LayerMgr.AddLayer(new CEthernetLayer("Ethernet"));
-	m_LayerMgr.AddLayer(new CFileLayer("File"));
+	m_LayerMgr.AddLayer(new CNILayer("Link"));
 	m_LayerMgr.AddLayer(this);
 
 	// 레이어를 연결한다. (레이어 생성)
-	m_LayerMgr.ConnectLayers("File ( *Ethernet ( *ChatApp ( *ChatDlg ) ) )");
+	m_LayerMgr.ConnectLayers("Link ( *Ethernet ( *ChatApp ( *ChatDlg ) ) )");
 
 	m_ChatApp = (CChatAppLayer*)m_LayerMgr.GetLayer("ChatApp");
 	//Protocol Layer Setting
@@ -90,6 +90,7 @@ void Cipc2019Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_DST, m_unDstAddr);
 	DDX_Text(pDX, IDC_EDIT_MSG, m_stMessage);
 	DDX_Control(pDX, IDC_LIST_CHAT, m_ListChat);
+	DDX_Control(pDX, IDC_COMBO1, deviceComboBox);
 }
 
 // 레지스트리에 등록하기 위한 변수
@@ -114,6 +115,7 @@ BEGIN_MESSAGE_MAP(Cipc2019Dlg, CDialogEx)
 	
 	
 	ON_BN_CLICKED(IDC_CHECK_TOALL, &Cipc2019Dlg::OnBnClickedCheckToall)
+	ON_CBN_SELCHANGE(IDC_COMBO1, &Cipc2019Dlg::OnCbnSelchangeCombo1)
 END_MESSAGE_MAP()
 
 
@@ -149,7 +151,19 @@ BOOL Cipc2019Dlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
-	SetRegstryMessage();
+
+	// Fill the device list
+	m_LayerMgr.GetLayer("Link");
+
+	CNILayer* linkLayer = (CNILayer*)m_LayerMgr.GetLayer("Link");
+	auto vector = linkLayer->GetDevicesList();
+	for (size_t i = 0; i < vector->size(); i++)
+	{
+		auto& device = (*vector)[i];
+
+		deviceComboBox.InsertString(i, device.description);
+		deviceComboBox.SetItemDataPtr(i, device.name);
+	}
 	SetDlgState(IPC_INITIALIZING);
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
@@ -241,9 +255,9 @@ void Cipc2019Dlg::SendData()
 {
 	CString MsgHeader;
 	if (m_unDstAddr == (unsigned int)0xff)
-		MsgHeader.Format(_T("[%d:BROADCAST] "), m_unSrcAddr);
+		MsgHeader = _T("[") + m_unSrcAddr + _T(":BROADCAST] ");
 	else
-		MsgHeader.Format(_T("[%d:%d] "), m_unSrcAddr, m_unDstAddr);
+		MsgHeader = _T("[") + m_unSrcAddr + m_unDstAddr + _T("] ");
 
 	m_ListChat.AddString(MsgHeader + m_stMessage);
 
@@ -300,6 +314,7 @@ void Cipc2019Dlg::SetDlgState(int state)
 	CEdit* pSrcEdit = (CEdit*)GetDlgItem(IDC_EDIT1);
 	CEdit* pDstEdit = (CEdit*)GetDlgItem(IDC_EDIT2);
 
+	CString dstAddr;
 	switch (state)
 	{
 	case IPC_INITIALIZING:
@@ -315,11 +330,11 @@ void Cipc2019Dlg::SetDlgState(int state)
 	case IPC_WAITFORACK:	break;
 	case IPC_ERROR:		break;
 	case IPC_UNICASTMODE:
-		m_unDstAddr = 0x0;
+		m_unDstAddr = _T("");
 		pDstEdit->EnableWindow(TRUE);
 		break;
 	case IPC_BROADCASTMODE:
-		m_unDstAddr = 0xff;
+		m_unDstAddr = _T("ff:ff:ff:ff:ff:ff");
 		pDstEdit->EnableWindow(FALSE);
 		break;
 	case IPC_ADDR_SET:
@@ -402,9 +417,20 @@ void Cipc2019Dlg::OnBnClickedButtonAddr()
 		SetDlgState(IPC_INITIALIZING);
 	}
 	else {
-		m_ChatApp->SetSourceAddress(m_unSrcAddr);
-		m_ChatApp->SetDestinAddress(m_unDstAddr);
+		auto ethernet = (CEthernetLayer*)m_LayerMgr.GetLayer("Ethernet");
 
+		// Parse the mac address string into bytes, then set the source / destination address in the ethernet layer
+		CNILayer::PhysicalAddress srcAddress, dstAddress;
+		 
+		// Scanf requires 32-bit destinations, so copy it into this intermediate storage
+		unsigned int intermediate[6];
+		sscanf_s( (const char*)m_unSrcAddr, "%02x:%02x:%02x:%02x:%02x:%02x", intermediate, intermediate + 1, intermediate + 2, intermediate + 3, intermediate + 4, intermediate + 5);
+		srcAddress.a = intermediate[0]; srcAddress.b = intermediate[1]; srcAddress.c = intermediate[2]; srcAddress.d = intermediate[3]; srcAddress.e = intermediate[4]; srcAddress.f = intermediate[5];
+		sscanf_s( (const char*)m_unDstAddr, "%02x:%02x:%02x:%02x:%02x:%02x", intermediate, intermediate + 1, intermediate + 2, intermediate + 3, intermediate + 4, intermediate + 5);
+		dstAddress.a = intermediate[0]; dstAddress.b = intermediate[1]; dstAddress.c = intermediate[2]; dstAddress.d = intermediate[3]; dstAddress.e = intermediate[4]; dstAddress.f = intermediate[5];
+		
+		ethernet->SetSourceAddress((unsigned char*)&srcAddress);
+		ethernet->SetDestinAddress((unsigned char*)&dstAddress);
 		SetDlgState(IPC_ADDR_SET);
 		SetDlgState(IPC_READYTOSEND);
 	}
@@ -424,4 +450,23 @@ void Cipc2019Dlg::OnBnClickedCheckToall()
 	else {
 		SetDlgState(IPC_UNICASTMODE);
 	}
+}
+
+
+void Cipc2019Dlg::OnCbnSelchangeCombo1()
+{
+	// TODO: Add your control notification handler code here
+
+	int selectedIndex = deviceComboBox.GetCurSel();
+	char* deviceName = (char*)deviceComboBox.GetItemDataPtr(selectedIndex);
+	CNILayer* linkLayer = (CNILayer*)m_LayerMgr.GetLayer("Link");
+	CNILayer::PhysicalAddress address{};
+	if (linkLayer->GetMacAddress(deviceName, &address))
+	{
+		CString format;
+		format.Format(_T("%02x:%02x:%02x:%02x:%02x:%02x"), (int)address.a, (int)address.b, (int)address.c, (int)address.d, (int)address.e, (int)address.f);
+		m_unSrcAddr = format;
+		UpdateData(FALSE);
+	}
+
 }
