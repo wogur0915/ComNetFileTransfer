@@ -26,12 +26,16 @@ public:
     } NetworkDevice;
 
     std::vector<NetworkDevice>* GetDevicesList();
+    void StartReceive(char* adapterName);
+
 
 private:
     BOOL LoadNpcapDlls();
     pcap_if_t* pointerToDeviceList;
     void PopulateDeviceList();
     std::vector<NetworkDevice> devicesList;
+    pcap_t* _adapter;
+    static UINT ReceiveMessageLoop(LPVOID pParam);
 
 };
 
