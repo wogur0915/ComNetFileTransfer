@@ -458,6 +458,10 @@ void Cipc2019Dlg::OnCbnSelchangeCombo1()
 	// TODO: Add your control notification handler code here
 
 	int selectedIndex = deviceComboBox.GetCurSel();
+	if (selectedIndex == 0xffffffff)
+	{
+		return;
+	}
 	char* deviceName = (char*)deviceComboBox.GetItemDataPtr(selectedIndex);
 	CNILayer* linkLayer = (CNILayer*)m_LayerMgr.GetLayer("Link");
 	CNILayer::PhysicalAddress address{};
