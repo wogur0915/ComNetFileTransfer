@@ -201,6 +201,7 @@
   <ItemGroup>
     <ClInclude Include="BaseLayer.h" />
     <ClInclude Include="ChatAppLayer.h" />
+    <ClInclude Include="FileAppLayer.h" />
     <ClInclude Include="NILayer.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="ipc2019.h" />
@@ -215,6 +216,7 @@
   <ItemGroup>
     <ClCompile Include="BaseLayer.cpp" />
     <ClCompile Include="ChatAppLayer.cpp" />
+    <ClCompile Include="FileAppLayer.cpp" />
     <ClCompile Include="NILayer.cpp" />
     <ClCompile Include="EthernetLayer.cpp" />
     <ClCompile Include="ipc2019.cpp" />
