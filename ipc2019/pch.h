@@ -13,6 +13,5 @@
 #include "LayerManager.h"
 #include "ChatAppLayer.h"
 #include "EthernetLayer.h"
-#include "FileLayer.h"
 
 #endif //PCH_H

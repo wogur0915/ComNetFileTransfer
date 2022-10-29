@@ -48,9 +48,6 @@
     <ClInclude Include="EthernetLayer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="FileLayer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="NILayer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -75,9 +72,6 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="EthernetLayer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="FileLayer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="NILayer.cpp">
