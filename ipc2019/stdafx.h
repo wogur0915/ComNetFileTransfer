@@ -39,6 +39,9 @@
 												          TCP_HEADER_SIZE +		\
 												          IP_HEADER_SIZE ) )
 
+#define CHAT_TYPE 2214
+#define FILE_TYPE 2224
+
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
 #endif // !defined(AFX_STDAFX_H__119ECB1B_6E70_4662_A2A9_A20B5201CA81__INCLUDED_)

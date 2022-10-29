@@ -41,18 +41,12 @@ unsigned char* CEthernetLayer::GetSourceAddress()
 
 unsigned char* CEthernetLayer::GetDestinAddress()
 {
-	//////////////////////// fill the blank ///////////////////////////////
-	// Ethernet 목적지 주소 return
 	return m_sHeader.enet_dstaddr;
-	///////////////////////////////////////////////////////////////////////
 }
 
 void CEthernetLayer::SetSourceAddress(unsigned char* pAddress)
 {
-	//////////////////////// fill the blank ///////////////////////////////
-		// 넘겨받은 source 주소를 Ethernet source주소로 지정
 	memcpy(m_sHeader.enet_srcaddr, pAddress, 6);
-	///////////////////////////////////////////////////////////////////////
 }
 
 void CEthernetLayer::SetDestinAddress(unsigned char* pAddress)
@@ -60,19 +54,12 @@ void CEthernetLayer::SetDestinAddress(unsigned char* pAddress)
 	memcpy(m_sHeader.enet_dstaddr, pAddress, 6);
 }
 
-BOOL CEthernetLayer::Send(unsigned char* ppayload, int nlength)
+BOOL CEthernetLayer::Send(unsigned char* ppayload, int nlength, unsigned short type)
 {
-	// ChatApp 계층에서 받은 App 계층의 Frame 길이만큼을 Ethernet계층의 data로 넣는다.
 	memcpy(m_sHeader.enet_data, ppayload, nlength);
-
-	BOOL bSuccess = FALSE;
-	//////////////////////// fill the blank ///////////////////////////////
-
-		// Ethernet Data + Ethernet Header의 사이즈를 합한 크기만큼의 Ethernet Frame을
-		// File 계층으로 보낸다.
-	bSuccess = mp_UnderLayer->Send((unsigned char*)&m_sHeader, nlength + ETHER_HEADER_SIZE);
-	///////////////////////////////////////////////////////////////////////
-	return bSuccess;
+	m_sHeader.enet_type = type;
+		
+	return mp_UnderLayer->Send((unsigned char*)&m_sHeader, nlength + ETHER_HEADER_SIZE);
 }
 
 BOOL CEthernetLayer::Receive(unsigned char* ppayload)
@@ -80,10 +67,37 @@ BOOL CEthernetLayer::Receive(unsigned char* ppayload)
 	PETHERNET_HEADER pFrame = (PETHERNET_HEADER)ppayload;
 
 	BOOL bSuccess = FALSE;
-	//////////////////////// fill the blank ///////////////////////////////
-		// ChatApp 계층으로 Ethernet Frame의 data를 넘겨준다.
-	bSuccess = GetUpperLayer(0)->Receive(pFrame->enet_data);
-	///////////////////////////////////////////////////////////////////////
+
+
+	// Only take in ethernet frames that are sent directly to us or is broadcast.
+	if (!AddressEquals(pFrame->enet_dstaddr, m_sHeader.enet_srcaddr) || !IsBroadcast(pFrame->enet_dstaddr))
+	{
+		return FALSE;
+	}
+
+	// Demultiplexing
+	if (pFrame->enet_type == CHAT_TYPE)
+	{
+		// Kind of a wonky hack. We're indicating that the message is broadcast by setting a field here when we receive the message
+		if (IsBroadcast(pFrame->enet_dstaddr))
+		{
+			((CChatAppLayer::PCHAT_APP_HEADER)pFrame->enet_data)->messageType = CChatAppLayer::CHAT_MESSAGE_BROADCAST;
+		}
+
+		bSuccess = GetUpperLayer(0)->Receive(pFrame->enet_data);
+	}
 
 	return bSuccess;
+}
+
+bool CEthernetLayer::AddressEquals(unsigned char* addr1, unsigned char* addr2)
+{
+	return memcmp(addr1, addr2, 6) == 0;
+}
+
+bool CEthernetLayer::IsBroadcast(unsigned char* address)
+{
+	static unsigned char broadcastAddress[6] { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+
+	return AddressEquals(address, broadcastAddress);
 }

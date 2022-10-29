@@ -106,7 +106,7 @@ BOOL CNILayer::GetMacAddress(char* deviceName, CNILayer::PhysicalAddress* outAdd
     return true;
 }
 
-// Sends the specified packet over the wire
+// Sends the specified packet over the wire.
 BOOL CNILayer::Send(unsigned char* payload, int length)
 {
     int code = pcap_inject(_adapter, payload, length);
@@ -117,16 +117,18 @@ void CNILayer::StartReceive(char* adapterName)
 {
     char errbuf[PCAP_ERRBUF_SIZE];
 
-    // pcap_open_live(device, snaplen, promisc, to_ms, errbuf)
-    // device is the device identifier string
-    // snaplen is the maximum snapshot length
-    // promisc is flag to set promiscuous mode
-    // to_ms is packet timeout in milliseconds
-    // From https://npcap.com/guide/wpcap/pcap.html:
-    // A snapshot length of 65535 should be sufficient, on most if not all networks...
+    // pcap_open_live(device, snaplen, promisc, to_ms, errbuf) - Opens and prepares a capture handle for the specified device.
+    // Parameters:
+    // device - the device identifier string
+    // snaplen - the maximum snapshot length
+    // promisc - flag to set promiscuous mode
+    // to_ms - timeout in milliseconds.
     // 
-    // Internally it apparently uses a 1MB buffer, so for us it should work out fine. pcap_set_buffer_size() with pcap_create can be used instead
-    pcap_t* handle = pcap_open_live(adapterName, /* snaplen */ 65535, /* promiscuous */ 1, /* timeout */ 0, errbuf);
+    // From https://npcap.com/guide/wpcap/pcap.html, "A snapshot length of 65535 should be sufficient, on most if not all networks..."
+    // As per the buffer size (for storing packets as it arrives) it's apparently 1MB when opened using pcap_open_live
+    // If needed, pcap_set_buffer_size() with pcap_create can be used instead to create & configure the capture handle
+    // However 1MB should be fine for us.
+    pcap_t* handle = pcap_open_live(adapterName, /* snaplen */ 65535, /* promiscuous */ 0, /* timeout */ 0, errbuf);
 
     if (!handle)
     {
@@ -139,6 +141,7 @@ void CNILayer::StartReceive(char* adapterName)
 
     _adapter = handle;
 
+    // Fire up a thread to eagerly wait
     AfxBeginThread(ReceiveMessageLoop, this);
 }
 
@@ -148,7 +151,7 @@ BOOL CNILayer::Receive()
     pcap_pkthdr* packetHeader;
     u_char* packet;
     // pcap_next_ex will continue to block until the timeout is reached or a packet is received
-    int code = pcap_next_ex(_adapter, &packetHeader, &packet);
+    int code = pcap_next_ex(_adapter, &packetHeader, (const u_char**)&packet);
     switch (code)
     {
         case 1: // The packet is read normally

@@ -20,7 +20,7 @@ private:
 
 public:
 	BOOL			Receive(unsigned char* ppayload);
-	BOOL			Send(unsigned char* ppayload, int nlength);
+	BOOL			Send(unsigned char* ppayload, int nlength, unsigned short type);
 	void			SetDestinAddress(unsigned char* pAddress);
 	void			SetSourceAddress(unsigned char* pAddress);
 	unsigned char* GetDestinAddress();
@@ -40,6 +40,8 @@ public:
 
 protected:
 	ETHERNET_HEADER	m_sHeader;
+	static bool AddressEquals(unsigned char* addr1, unsigned char* addr2);
+	static bool IsBroadcast(unsigned char* address);
 };
 
 #endif // !defined(AFX_ETHERNETLAYER_H__7857C9C2_B459_4DC8_B9B3_4E6C8B587B29__INCLUDED_)
