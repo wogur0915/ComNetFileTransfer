@@ -75,6 +75,12 @@ BOOL CEthernetLayer::Receive(unsigned char* ppayload)
 		return FALSE;
 	}
 
+	if (AddressEquals(pFrame->enet_srcaddr, m_sHeader.enet_srcaddr))
+	{
+		// If, for some reason, we got the packet that we've sent back to us, discard
+		return FALSE;
+	}
+
 	// Demultiplexing
 	if (pFrame->enet_type == CHAT_TYPE)
 	{

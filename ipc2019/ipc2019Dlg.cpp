@@ -56,7 +56,6 @@ Cipc2019Dlg::Cipc2019Dlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_IPC2019_DIALOG, pParent)
 	, CBaseLayer("ChatDlg")
 	, m_bSendReady(FALSE)
-	, m_nAckReady( -1 )
 
 	, m_unSrcAddr("")
 	, m_unDstAddr("")
@@ -93,26 +92,12 @@ void Cipc2019Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO1, deviceComboBox);
 }
 
-// 레지스트리에 등록하기 위한 변수
-UINT nRegSendMsg;
-UINT nRegAckMsg;
-// 레지스트리에 등록하기 위한 변수
-
-
 BEGIN_MESSAGE_MAP(Cipc2019Dlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON_ADDR, &Cipc2019Dlg::OnBnClickedButtonAddr)
 	ON_BN_CLICKED(IDC_BUTTON_SEND, &Cipc2019Dlg::OnBnClickedButtonSend)
-	ON_WM_TIMER()
-
-	ON_REGISTERED_MESSAGE(nRegSendMsg, OnRegSendMsg)
-	//////////////////////// fill the blank ///////////////////////////////
-		// Ack 레지스터 등록
-	ON_REGISTERED_MESSAGE(nRegAckMsg, OnRegAckMsg)
-	///////////////////////////////////////////////////////////////////////
-	
 	
 	ON_BN_CLICKED(IDC_CHECK_TOALL, &Cipc2019Dlg::OnBnClickedCheckToall)
 	ON_CBN_SELCHANGE(IDC_COMBO1, &Cipc2019Dlg::OnCbnSelchangeCombo1)
@@ -227,37 +212,18 @@ void Cipc2019Dlg::OnBnClickedButtonSend()
 
 	if (!m_stMessage.IsEmpty())
 	{
-		SetTimer(1, 2000, NULL);
-		m_nAckReady = 0;
-
 		SendData();
 		m_stMessage = "";
 
 		(CEdit*)GetDlgItem(IDC_EDIT3)->SetFocus();
-
-		//////////////////////// fill the blank ///////////////////////////////
-				// Send 신호를 브로드캐스트로 알림
-		::SendMessage(HWND_BROADCAST, nRegSendMsg, 0, 0);
-		///////////////////////////////////////////////////////////////////////
 	}
 
 	UpdateData(FALSE);
 }
 
-void Cipc2019Dlg::SetRegstryMessage()
-{
-	nRegSendMsg = RegisterWindowMessage(_T("Send IPC Message"));
-	nRegAckMsg = RegisterWindowMessage(_T("Ack IPC Message"));
-
-}
-
 void Cipc2019Dlg::SendData()
 {
-	CString MsgHeader;
-	if (m_unDstAddr == (unsigned int)0xff)
-		MsgHeader = _T("[") + m_unSrcAddr + _T(":BROADCAST] ");
-	else
-		MsgHeader = _T("[") + m_unSrcAddr + m_unDstAddr + _T("] ");
+	CString MsgHeader = _T("[You] ");
 
 	m_ListChat.AddString(MsgHeader + m_stMessage);
 
@@ -266,17 +232,11 @@ void Cipc2019Dlg::SendData()
 	memcpy(ppayload, (unsigned char*)(LPCTSTR)m_stMessage, nlength);
 	ppayload[nlength] = '\0';
 
-
-	// 보낼 data와 메시지 길이를 Send함수로 넘겨준다.
 	m_ChatApp->Send(ppayload, nlength);
 }
 
 BOOL Cipc2019Dlg::Receive(unsigned char* ppayload)
 {
-	if (m_nAckReady == -1)
-	{
-	}
-
 	m_ListChat.AddString((LPCTSTR)ppayload);
 	return TRUE;
 }
@@ -361,43 +321,6 @@ void Cipc2019Dlg::EndofProcess()
 	m_LayerMgr.DeAllocLayer();
 }
 
-// Send메시지 레지스트리가 켜졌을 때
-LRESULT Cipc2019Dlg::OnRegSendMsg(WPARAM wParam, LPARAM lParam)
-{
-	//////////////////////// fill the blank ///////////////////////////////
-	if (m_nAckReady) {
-		// File 레이어에서 상대방이 전송한 메시지가 담긴 파일을 가져옴
-		if (m_LayerMgr.GetLayer("File")->Receive())
-		{
-			// 메시지를 받았다면 Ack 신호를 브로드캐스트로 날린다.
-			::SendMessage(HWND_BROADCAST, nRegAckMsg, 0, 0);
-		}
-	}
-	///////////////////////////////////////////////////////////////////////
-	return 0;
-}
-
-LRESULT Cipc2019Dlg::OnRegAckMsg(WPARAM wParam, LPARAM lParam)
-{
-	if (!m_nAckReady) { // Ack 신호를 받으면 타이머를 멈춘다.
-		m_nAckReady = -1;
-		KillTimer(1);
-	}
-
-	return 0;
-}
-
-void Cipc2019Dlg::OnTimer(UINT_PTR nIDEvent)
-{
-	// TODO: Add your message handler code here and/or call default
-	m_ListChat.AddString(_T(">> The last message was time-out.."));
-	m_nAckReady = -1;
-	KillTimer(1);
-
-	CDialog::OnTimer(nIDEvent);
-}
-
-
 void Cipc2019Dlg::OnBnClickedButtonAddr()
 {
 	UpdateData(TRUE);
@@ -431,6 +354,11 @@ void Cipc2019Dlg::OnBnClickedButtonAddr()
 		
 		ethernet->SetSourceAddress((unsigned char*)&srcAddress);
 		ethernet->SetDestinAddress((unsigned char*)&dstAddress);
+
+		auto networkInterface = (CNILayer*)m_LayerMgr.GetLayer("Link");
+		auto currentSelection = deviceComboBox.GetCurSel();
+		char* deviceId = (char*)deviceComboBox.GetItemDataPtr(currentSelection);
+		networkInterface->StartReceive(deviceId);
 		SetDlgState(IPC_ADDR_SET);
 		SetDlgState(IPC_READYTOSEND);
 	}

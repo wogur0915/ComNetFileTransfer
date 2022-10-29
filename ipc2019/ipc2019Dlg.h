@@ -46,8 +46,6 @@ public:
 //	UINT unSrcAddr;
 //	CString m_stMessage;
 //	CListBox m_ListChat;
-	
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
 
 
 public:
@@ -56,7 +54,6 @@ public:
 
 private:
 	CLayerManager	m_LayerMgr;
-	int				m_nAckReady;
 
 	enum {
 		IPC_INITIALIZING,
@@ -71,9 +68,6 @@ private:
 
 	void			SetDlgState(int state);
 	inline void		EndofProcess();
-	inline void		SetRegstryMessage();
-	LRESULT			OnRegSendMsg(WPARAM wParam, LPARAM lParam);
-	LRESULT			OnRegAckMsg(WPARAM wParam, LPARAM lParam);
 
 	BOOL			m_bSendReady;
 

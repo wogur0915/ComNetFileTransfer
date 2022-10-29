@@ -32,9 +32,8 @@
 #define TCP_HEADER_SIZE			20
 #define IP_HEADER_SIZE			20
 
-#define APP_HEADER_SIZE			( sizeof(unsigned int) * 2 +				\
-								  sizeof(unsigned short) +					\
-								  sizeof(unsigned char)	)
+#define APP_HEADER_SIZE			( sizeof(unsigned short) + \
+								  sizeof(unsigned char) * 2	)
 #define APP_DATA_SIZE			( ETHER_MAX_DATA_SIZE - ( APP_HEADER_SIZE +		\
 												          TCP_HEADER_SIZE +		\
 												          IP_HEADER_SIZE ) )

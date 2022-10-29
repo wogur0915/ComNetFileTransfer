@@ -32,6 +32,7 @@ void CChatAppLayer::ResetHeader()
 {
     m_sHeader.dataLength = 0x0000;
     m_sHeader.messageType = 0x00;
+    m_sHeader.unused = 0x00;
     memset(m_sHeader.data, 0, APP_DATA_SIZE);
 }
 
