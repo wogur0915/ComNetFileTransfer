@@ -232,7 +232,7 @@ void Cipc2019Dlg::SendData()
 	memcpy(ppayload, (unsigned char*)(LPCTSTR)m_stMessage, nlength);
 	ppayload[nlength] = '\0';
 
-	m_ChatApp->Send(ppayload, nlength);
+	m_ChatApp->Send(ppayload, nlength + 1);
 }
 
 BOOL Cipc2019Dlg::Receive(unsigned char* ppayload)
