@@ -165,12 +165,12 @@ BOOL CNILayer::Receive()
             break;
         case PCAP_ERROR: // An error occured while reading
             AfxMessageBox(pcap_geterr(_adapter));
-            // Fallthrough
-        case 0:	// Timeout
-        default:
 #ifdef DEBUG
             DebugBreak();
 #endif
+            // Fallthrough
+        case 0:	// Timeout
+        default:
             return false;
     }
 
