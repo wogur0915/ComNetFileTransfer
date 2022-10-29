@@ -128,8 +128,7 @@ void CNILayer::StartReceive(char* adapterName)
     // As per the buffer size (for storing packets as it arrives) it's apparently 1MB when opened using pcap_open_live
     // If needed, pcap_set_buffer_size() with pcap_create can be used instead to create & configure the capture handle
     // However 1MB should be fine for us.
-    pcap_t* handle = pcap_open_live(adapterName, /* snaplen */ 65535, /* promiscuous */ 0, /* timeout */ 0, errbuf);
-
+    pcap_t* handle = pcap_create(adapterName, errbuf);
     if (!handle)
     {
         AfxMessageBox("Failed to open device handle");
@@ -138,6 +137,14 @@ void CNILayer::StartReceive(char* adapterName)
 #endif
         return;
     }
+    pcap_set_timeout(handle, 0); // Packet buffer timeout; time to wait for the buffer to fill up with traffics, for efficient processing. We don't need it
+    pcap_set_promisc(handle, TRUE); // Enable promiscuous mode; no hardware filtering, though we probably don't need it?
+    pcap_set_immediate_mode(handle, TRUE); // Don't wait for the buffer to fill up. Receive packets as soon as they arrive
+    pcap_set_buffer_size(handle, 1024 * 1024); // 1MB is apparently the default for handles created with pcap_open_live.
+    pcap_set_snaplen(handle, 65535); // From https://npcap.com/guide/wpcap/pcap.html
+    // "A snapshot length of 65535 should be sufficient, on most if not all networks..."
+
+    pcap_activate(handle);
 
     _adapter = handle;
 

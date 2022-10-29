@@ -70,7 +70,7 @@ BOOL CEthernetLayer::Receive(unsigned char* ppayload)
 
 
 	// Only take in ethernet frames that are sent directly to us or is broadcast.
-	if (!AddressEquals(pFrame->enet_dstaddr, m_sHeader.enet_srcaddr) || !IsBroadcast(pFrame->enet_dstaddr))
+	if (!AddressEquals(pFrame->enet_dstaddr, m_sHeader.enet_srcaddr) && !IsBroadcast(pFrame->enet_dstaddr))
 	{
 		return FALSE;
 	}
