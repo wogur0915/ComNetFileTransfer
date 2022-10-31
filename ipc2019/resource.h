@@ -23,9 +23,12 @@
 #define IDC_CHECK_TOALL                 1006
 #define IDC_COMBO1                      1007
 #define IDC_EDIT4                       1009
+#define IDC_FILEPATHBOX                 1009
 #define IDC_PROGRESS1                   1010
 #define IDC_BUTTON1                     1011
+#define IDC_FILESELECTBUTTON            1011
 #define IDC_BUTTON2                     1012
+#define IDC_FILESENDBUTTON              1012
 
 // Next default values for new objects
 // 

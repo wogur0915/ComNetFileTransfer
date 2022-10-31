@@ -60,6 +60,7 @@ Cipc2019Dlg::Cipc2019Dlg(CWnd* pParent /*=nullptr*/)
 	, m_unSrcAddr("")
 	, m_unDstAddr("")
 	, m_stMessage(_T(""))
+	, _selectedFilePath(_T(""))
 {
 	//대화상자 멤버 변수 초기화
 	//  m_unDstAddr = 0;
@@ -90,6 +91,8 @@ void Cipc2019Dlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_MSG, m_stMessage);
 	DDX_Control(pDX, IDC_LIST_CHAT, m_ListChat);
 	DDX_Control(pDX, IDC_COMBO1, deviceComboBox);
+	DDX_Text(pDX, IDC_FILEPATHBOX, _selectedFilePath);
+	DDX_Control(pDX, IDC_PROGRESS1, _progressBar);
 }
 
 BEGIN_MESSAGE_MAP(Cipc2019Dlg, CDialogEx)
@@ -101,6 +104,8 @@ BEGIN_MESSAGE_MAP(Cipc2019Dlg, CDialogEx)
 	
 	ON_BN_CLICKED(IDC_CHECK_TOALL, &Cipc2019Dlg::OnBnClickedCheckToall)
 	ON_CBN_SELCHANGE(IDC_COMBO1, &Cipc2019Dlg::OnCbnSelchangeCombo1)
+	ON_BN_CLICKED(IDC_FILESELECTBUTTON, &Cipc2019Dlg::OnBnClickedFileselectbutton)
+	ON_BN_CLICKED(IDC_FILESENDBUTTON, &Cipc2019Dlg::OnBnClickedFilesendbutton)
 END_MESSAGE_MAP()
 
 
@@ -401,4 +406,23 @@ void Cipc2019Dlg::OnCbnSelchangeCombo1()
 		UpdateData(FALSE);
 	}
 
+}
+
+
+void Cipc2019Dlg::OnBnClickedFileselectbutton()
+{
+	CFileDialog dialog(TRUE);
+
+	if (dialog.DoModal() == IDOK)
+	{
+		CString path = dialog.GetPathName();
+		_selectedFilePath = path;
+		UpdateData(FALSE);
+	}
+}
+
+
+void Cipc2019Dlg::OnBnClickedFilesendbutton()
+{
+	// TODO: Add your control notification handler code here
 }

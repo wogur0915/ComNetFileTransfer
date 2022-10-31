@@ -1,7 +1,7 @@
 #pragma once
 #include "BaseLayer.h"
 
-constexpr auto FILE_APP_HEADER_SIZE = sizeof(short) * 2 + sizeof(int);
+constexpr auto FILE_APP_HEADER_SIZE = sizeof(short) + sizeof(char) * 2 + sizeof(int);
 constexpr auto FILE_APP_MAX_MESSAGE_SIZE = ETHER_MAX_DATA_SIZE;
 constexpr auto FILE_APP_MAX_DATA_SIZE = FILE_APP_MAX_MESSAGE_SIZE - FILE_APP_HEADER_SIZE;
 
@@ -20,20 +20,27 @@ private:
     BOOL Send(unsigned char* data, size_t len);
     static UINT SendFileInternal(LPVOID pParam);
     // Returns bytes consumed
-    int SendFirstPart(CString fileName, unsigned int fragmentCount, CFile& file);
+    int SendMetadata(CString fileName, unsigned int fragmentCount);
     // Returns bytes consumed
     int SendPart(unsigned int sequenceNumber, CFile& file);
+    bool WaitForAck(unsigned int sequenceNumber);
+    void SendAck(unsigned int sequenceNumber);
 
-    // Requirements
-    // Does support out-of-order files
-    // however 
+    typedef enum : unsigned char {
+        ACK, // Acknowledge to any of the messages sent from the client.
+        METADATA, // Contains the total segment count and the file name
+        FRAGMENT, // File data.
+        FINALFRAGMENT // File data. Marks the end of transmission
+    } MessageType;
+
     typedef struct {
         unsigned short dataLength; // Length of the data contained in this fragment. For the first message, this includes the metadata
-        unsigned short unused;
+        MessageType messageType; // Can be: metadata, fragment, finalFragment, ack
+        unsigned char unused;
         unsigned int sequenceNumber; // Sequence number of this fragment. 0 based
         char data[FILE_APP_MAX_DATA_SIZE];
     } FILE_MESSAGE;
-    
+   
     // Some fixed buffer space for storing file message when receiving
     FILE_MESSAGE _message;
 
@@ -61,5 +68,6 @@ private:
 
     struct {
         CString path;
+        unsigned int lastAck;
     } _fileSending;
 };

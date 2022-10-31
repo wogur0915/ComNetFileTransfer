@@ -87,4 +87,8 @@ public:
 	// The combobox containing available device list
 	CComboBox deviceComboBox;
 	afx_msg void OnCbnSelchangeCombo1();
+	CString _selectedFilePath;
+	CProgressCtrl _progressBar;
+	afx_msg void OnBnClickedFileselectbutton();
+	afx_msg void OnBnClickedFilesendbutton();
 };
