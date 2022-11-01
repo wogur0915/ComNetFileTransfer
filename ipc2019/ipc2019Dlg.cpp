@@ -434,7 +434,7 @@ void Cipc2019Dlg::OnBnClickedFileselectbutton()
 void Cipc2019Dlg::OnBnClickedFilesendbutton()
 {
 	CFileAppLayer* layer = (CFileAppLayer*)m_LayerMgr.GetLayer("FileApp");
-	layer->SendFile(this->_selectedFilePath, FileReceiveHandler, this);
+	layer->SendFile(this->_selectedFilePath, FileSendHandler, this);
 }
 
 
