@@ -284,9 +284,12 @@ void Cipc2019Dlg::SetDlgState(int state)
 
 	CButton* pSendButton = (CButton*)GetDlgItem(bt_send);
 	CButton* pSetAddrButton = (CButton*)GetDlgItem(bt_setting);
+	CButton* pFileSelectButton = (CButton*)GetDlgItem(IDC_FILESELECTBUTTON);
+	CButton* pFileSendButton = (CButton*)GetDlgItem(IDC_FILESENDBUTTON);
 	CEdit* pMsgEdit = (CEdit*)GetDlgItem(IDC_EDIT3);
 	CEdit* pSrcEdit = (CEdit*)GetDlgItem(IDC_EDIT1);
 	CEdit* pDstEdit = (CEdit*)GetDlgItem(IDC_EDIT2);
+	CEdit* pPathEdit = (CEdit*)GetDlgItem(IDC_FILEPATHBOX);
 
 	CString dstAddr;
 	switch (state)
@@ -295,11 +298,18 @@ void Cipc2019Dlg::SetDlgState(int state)
 		pSendButton->EnableWindow(FALSE);
 		pMsgEdit->EnableWindow(FALSE);
 		m_ListChat.EnableWindow(FALSE);
+		pPathEdit->EnableWindow(FALSE);
+		pFileSelectButton->EnableWindow(FALSE);
+		pFileSendButton->EnableWindow(FALSE);
+		_progressBar.SetRange(0, 65535);
 		break;
 	case IPC_READYTOSEND:
 		pSendButton->EnableWindow(TRUE);
 		pMsgEdit->EnableWindow(TRUE);
 		m_ListChat.EnableWindow(TRUE);
+		pPathEdit->EnableWindow(TRUE);
+		pFileSelectButton->EnableWindow(TRUE);
+		pFileSendButton->EnableWindow(TRUE);
 		break;
 	case IPC_WAITFORACK:	break;
 	case IPC_ERROR:		break;
@@ -313,9 +323,10 @@ void Cipc2019Dlg::SetDlgState(int state)
 		break;
 	case IPC_ADDR_SET:
 		pSetAddrButton->SetWindowText(_T("재설정(&R)"));
+		pSetAddrButton->EnableWindow(FALSE);
 		pSrcEdit->EnableWindow(FALSE);
 		pDstEdit->EnableWindow(FALSE);
-		//pChkButton->EnableWindow(FALSE);
+		pChkButton->EnableWindow(FALSE);
 		break;
 	case IPC_ADDR_RESET:
 		pSetAddrButton->SetWindowText(_T("설정(&O)"));
@@ -397,8 +408,6 @@ void Cipc2019Dlg::OnBnClickedCheckToall()
 
 void Cipc2019Dlg::OnCbnSelchangeCombo1()
 {
-	// TODO: Add your control notification handler code here
-
 	int selectedIndex = deviceComboBox.GetCurSel();
 	if (selectedIndex == 0xffffffff)
 	{
@@ -444,19 +453,18 @@ void Cipc2019Dlg::FileReceiveHandler(void* pParam, unsigned int fragmentsReceive
 	Cipc2019Dlg* thisPtr = (Cipc2019Dlg*)pParam;
 	if (fragmentsReceived == 1)
 	{
-		thisPtr->m_ListChat.AddString(_T("File receive start"));
+		thisPtr->m_ListChat.AddString(_T("Receiving new file..."));
 	}
 	else if (fragmentsReceived == totalFragments)
 	{
-		thisPtr->m_ListChat.AddString(_T("File receive end"));
+		thisPtr->m_ListChat.AddString(_T("File received"));
 	}
 }
 
 void Cipc2019Dlg::FileSendHandler(void* pParam, unsigned int fragmentsSent, unsigned totalFragments)
 {
 	Cipc2019Dlg* thisPtr = (Cipc2019Dlg*)pParam;
-	thisPtr->_progressBar.SetRange(0, 65535);
 	double percent = (double)fragmentsSent / totalFragments;
-	short pos = 65535 * percent;
+	int pos = 65535 * percent;
 	thisPtr->_progressBar.SetPos(pos);
 }
