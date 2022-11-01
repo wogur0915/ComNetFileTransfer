@@ -2,7 +2,7 @@
 #include "FileAppLayer.h"
 
 CFileAppLayer::CFileAppLayer(char* pName) : CBaseLayer(pName), _message(), _receivedHandler(),
-_handlerParam(), _fileReceiving(), _fileSending()
+_receiveHandlerParam(), _fileReceiving(), _fileSending()
 {
 }
 
@@ -14,7 +14,7 @@ CFileAppLayer::~CFileAppLayer()
 void CFileAppLayer::SetFileReceiveHandler(CFileAppLayer::ProgressUpdateHandler handler, void* param)
 {
 	_receivedHandler = handler;
-	_handlerParam = param;
+	_receiveHandlerParam = param;
 }
 
 // Sending methods
@@ -32,6 +32,8 @@ BOOL CFileAppLayer::Send(unsigned char* data, size_t len)
 
 BOOL CFileAppLayer::SendFile(CString filePath, CFileAppLayer::ProgressUpdateHandler progressUpdated, void* handlerParam)
 {
+	_sendingHandler = progressUpdated;
+	_sendingHandlerParam = handlerParam;
 	_fileSending.path = filePath;
 
 	AfxBeginThread(SendFileInternal, this);
@@ -49,7 +51,7 @@ UINT CFileAppLayer::SendFileInternal(LPVOID pParam)
 	ULONGLONG fileLength = file.GetLength();
 	// The calculation is required, because we are going to send the total fragment count and the file name
 	unsigned long long messageLength = static_cast<unsigned long long>(sizeof(int)) + fileNameLength + 1 + fileLength;
-	unsigned int fragmentCount = messageLength / FILE_APP_MAX_DATA_SIZE;
+	unsigned int fragmentCount = messageLength / FILE_APP_MAX_DATA_SIZE + 1;
 	if (fileLength % FILE_APP_MAX_DATA_SIZE > 0)
 	{
 		fragmentCount++;
@@ -57,19 +59,29 @@ UINT CFileAppLayer::SendFileInternal(LPVOID pParam)
 
 	do
 	{
+		TRACE("Sending file header (fragment #0)");
 		thisPtr->SendMetadata(fileName, fragmentCount);
 	} while (!thisPtr->WaitForAck(0));
 
-	thisPtr->_receivedHandler(thisPtr->_handlerParam, 1, fragmentCount);
+	thisPtr->_sendingHandler(thisPtr->_receiveHandlerParam, 1, fragmentCount);
 
-	for (unsigned int i = 1; i < fragmentCount; i++)
+	for (unsigned int i = 1; i < fragmentCount - 1; i++)
 	{
 		do
 		{
-			thisPtr->SendPart(i, file);
+			TRACE("Sending file part %d out of %d", i, fragmentCount);
+			thisPtr->SendPart(i, file, false);
 		} while (!thisPtr->WaitForAck(i));
-		thisPtr->_receivedHandler(thisPtr->_handlerParam, i, fragmentCount);
+		thisPtr->_sendingHandler(thisPtr->_receiveHandlerParam, i, fragmentCount);
 	}
+
+	do
+	{
+		TRACE("Sending final fragment");
+		thisPtr->SendPart(fragmentCount - 1, file, true);
+	} while (!thisPtr->WaitForAck(fragmentCount - 1));
+	thisPtr->_sendingHandler(thisPtr->_receiveHandlerParam, fragmentCount, fragmentCount);
+
 	file.Close();
 	return 0;
 }
@@ -97,9 +109,10 @@ int CFileAppLayer::SendMetadata(CString fileName, unsigned int fragmentCount)
 	return 0;
 }
 
-int CFileAppLayer::SendPart(unsigned int sequenceNumber, CFile& file)
+int CFileAppLayer::SendPart(unsigned int sequenceNumber, CFile& file, bool isFinal)
 {
 	FILE_MESSAGE message;
+	message.messageType = isFinal ? MessageType::FINALFRAGMENT : MessageType::FRAGMENT;
 	message.unused = 0;
 	message.sequenceNumber = sequenceNumber;
 
@@ -116,6 +129,7 @@ bool CFileAppLayer::WaitForAck(unsigned int sequenceNumber)
 	{
 		if (_fileSending.lastAck == sequenceNumber)
 		{
+			TRACE("ACK for %d processed", sequenceNumber);
 			return true;
 		}
 		Sleep(1);
@@ -134,14 +148,17 @@ BOOL CFileAppLayer::Receive(unsigned char* payload)
 	char* data = message->data;
 	if (message->messageType == MessageType::ACK)
 	{
+		TRACE("Received ack for %d", message->sequenceNumber);
 		_fileSending.lastAck = message->sequenceNumber;
 		return true;
 	}
 	
+	TRACE("Sending ACK for %d", message->sequenceNumber);
 	SendAck(message->sequenceNumber);
 
 	if (message->messageType == MessageType::METADATA)
 	{
+		TRACE("Received metadata");
 		// Prepare to receive file
 		_fileReceiving.fragmentsReceived = 1;
 		unsigned int fragmentCount = *(unsigned int*)data;
@@ -155,6 +172,8 @@ BOOL CFileAppLayer::Receive(unsigned char* payload)
 		{
 			TRACE("Failed to create file");
 		}
+
+		_receivedHandler(_receiveHandlerParam, 1, fragmentCount);
 		return true;
 	}
 
@@ -164,13 +183,16 @@ BOOL CFileAppLayer::Receive(unsigned char* payload)
 		return false;
 	}
 
+	TRACE("writing segment %d to file", message->sequenceNumber);
 	// here, the file must be some sort of fragment
 	LONGLONG position = static_cast<LONGLONG>(message->sequenceNumber) * FILE_APP_MAX_DATA_SIZE;
 	_fileReceiving.receivedFile.Seek(position, CFile::begin);
 	_fileReceiving.receivedFile.Write(data, message->dataLength);
+	_receivedHandler(_receiveHandlerParam, message->sequenceNumber + 1, _fileReceiving.totalFragmentsToReceive);
 
 	if (message->messageType == MessageType::FINALFRAGMENT)
 	{
+		TRACE("Last segment received, closing file");
 		// Close file
 		_fileReceiving.receivedFile.Close();
 		CFile::Rename("tempfile_downloading", _fileReceiving.name);

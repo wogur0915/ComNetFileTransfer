@@ -22,7 +22,7 @@ private:
     // Returns bytes consumed
     int SendMetadata(CString fileName, unsigned int fragmentCount);
     // Returns bytes consumed
-    int SendPart(unsigned int sequenceNumber, CFile& file);
+    int SendPart(unsigned int sequenceNumber, CFile& file, bool isFinal);
     bool WaitForAck(unsigned int sequenceNumber);
     void SendAck(unsigned int sequenceNumber);
 
@@ -46,7 +46,11 @@ private:
 
     // Handler invoked when a new file is received.
     ProgressUpdateHandler _receivedHandler;
-    void* _handlerParam;
+    void* _receiveHandlerParam;
+
+    // Handler invoked for progress report when sending file
+    ProgressUpdateHandler _sendingHandler;
+    void* _sendingHandlerParam;
 
     // In addition to the actual file, the first packet that's transmitted also contain the following:
     // a 4-byte unsigned number, indicating how many fragments are expected - for progress report on the receiving end

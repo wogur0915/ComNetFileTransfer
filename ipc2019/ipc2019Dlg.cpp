@@ -450,6 +450,8 @@ void Cipc2019Dlg::FileReceiveHandler(void* pParam, unsigned int fragmentsReceive
 	{
 		thisPtr->m_ListChat.AddString(_T("File receive end"));
 	}
+
+	thisPtr->UpdateData(FALSE);
 }
 
 void Cipc2019Dlg::FileSendHandler(void* pParam, unsigned int fragmentsSent, unsigned totalFragments)
@@ -459,4 +461,5 @@ void Cipc2019Dlg::FileSendHandler(void* pParam, unsigned int fragmentsSent, unsi
 	double percent = (double)fragmentsSent / totalFragments;
 	short pos = 65535 * percent;
 	thisPtr->_progressBar.SetPos(pos);
+	thisPtr->UpdateData();
 }
