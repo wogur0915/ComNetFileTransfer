@@ -93,7 +93,7 @@ BOOL CEthernetLayer::Receive(unsigned char* ppayload)
 
 		bSuccess = GetUpperLayer(0)->Receive(pFrame->enet_data);
 	}
-	else if (pFrame->enet_type == FILE_TYPE)
+	else if (etherType == FILE_TYPE)
 	{
 		// File app
 		bSuccess = GetUpperLayer(1)->Receive(pFrame->enet_data);
