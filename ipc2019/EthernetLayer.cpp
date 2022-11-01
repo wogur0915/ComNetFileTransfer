@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "pch.h"
 #include "EthernetLayer.h"
+#include "helper.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -57,7 +58,7 @@ void CEthernetLayer::SetDestinAddress(unsigned char* pAddress)
 BOOL CEthernetLayer::Send(unsigned char* ppayload, int nlength, unsigned short type)
 {
 	memcpy(m_sHeader.enet_data, ppayload, nlength);
-	m_sHeader.enet_type = type;
+	m_sHeader.enet_type = SwapEndianness(type);
 		
 	return mp_UnderLayer->Send((unsigned char*)&m_sHeader, nlength + ETHER_HEADER_SIZE);
 }
@@ -67,7 +68,6 @@ BOOL CEthernetLayer::Receive(unsigned char* ppayload)
 	PETHERNET_HEADER pFrame = (PETHERNET_HEADER)ppayload;
 
 	BOOL bSuccess = FALSE;
-
 
 	// Only take in ethernet frames that are sent directly to us or is broadcast.
 	if (!AddressEquals(pFrame->enet_dstaddr, m_sHeader.enet_srcaddr) && !IsBroadcast(pFrame->enet_dstaddr))
@@ -81,8 +81,9 @@ BOOL CEthernetLayer::Receive(unsigned char* ppayload)
 		return FALSE;
 	}
 
+	auto etherType = SwapEndianness(pFrame->enet_type);
 	// Demultiplexing
-	if (pFrame->enet_type == CHAT_TYPE)
+	if (etherType == CHAT_TYPE)
 	{
 		// Kind of a wonky hack. We're indicating that the message is broadcast by setting a field here when we receive the message
 		if (IsBroadcast(pFrame->enet_dstaddr))

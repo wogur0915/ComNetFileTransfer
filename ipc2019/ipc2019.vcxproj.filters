@@ -54,6 +54,9 @@
     <ClInclude Include="FileAppLayer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="helper.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ipc2019.cpp">
@@ -81,6 +84,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="FileAppLayer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="helper.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
