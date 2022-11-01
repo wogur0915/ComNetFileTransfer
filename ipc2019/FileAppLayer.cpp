@@ -185,7 +185,7 @@ BOOL CFileAppLayer::Receive(unsigned char* payload)
 
 	TRACE("writing segment %d to file", message->sequenceNumber);
 	// here, the file must be some sort of fragment
-	LONGLONG position = static_cast<LONGLONG>(message->sequenceNumber) * FILE_APP_MAX_DATA_SIZE;
+	LONGLONG position = static_cast<LONGLONG>(message->sequenceNumber - 1) * FILE_APP_MAX_DATA_SIZE;
 	_fileReceiving.receivedFile.Seek(position, CFile::begin);
 	_fileReceiving.receivedFile.Write(data, message->dataLength);
 	_receivedHandler(_receiveHandlerParam, message->sequenceNumber + 1, _fileReceiving.totalFragmentsToReceive);
