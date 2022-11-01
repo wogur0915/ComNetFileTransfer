@@ -461,5 +461,5 @@ void Cipc2019Dlg::FileSendHandler(void* pParam, unsigned int fragmentsSent, unsi
 	double percent = (double)fragmentsSent / totalFragments;
 	short pos = 65535 * percent;
 	thisPtr->_progressBar.SetPos(pos);
-	thisPtr->UpdateData();
+	thisPtr->UpdateData(FALSE);
 }
