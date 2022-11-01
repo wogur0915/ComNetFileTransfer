@@ -75,9 +75,18 @@ Cipc2019Dlg::Cipc2019Dlg(CWnd* pParent /*=nullptr*/)
 	m_LayerMgr.AddLayer(new CEthernetLayer("Ethernet"));
 	m_LayerMgr.AddLayer(new CNILayer("Link"));
 	m_LayerMgr.AddLayer(this);
+	m_LayerMgr.AddLayer(new CFileAppLayer("FileApp"));
 
 	// 레이어를 연결한다. (레이어 생성)
 	m_LayerMgr.ConnectLayers("Link ( *Ethernet ( *ChatApp ( *ChatDlg ) ) )");
+
+	CFileAppLayer* fileAppLayer = (CFileAppLayer*)m_LayerMgr.GetLayer("FileApp");
+
+	fileAppLayer->SetUnderLayer(m_LayerMgr.GetLayer("Ethetnet"));
+	m_LayerMgr.GetLayer("Ethernet")->SetUpperLayer(fileAppLayer);
+	fileAppLayer->SetUpperLayer(this);
+	
+	fileAppLayer->SetFileReceiveHandler(FileReceiveHandler, this);
 
 	m_ChatApp = (CChatAppLayer*)m_LayerMgr.GetLayer("ChatApp");
 	//Protocol Layer Setting
@@ -424,5 +433,30 @@ void Cipc2019Dlg::OnBnClickedFileselectbutton()
 
 void Cipc2019Dlg::OnBnClickedFilesendbutton()
 {
-	// TODO: Add your control notification handler code here
+	CFileAppLayer* layer = (CFileAppLayer*)m_LayerMgr.GetLayer("FileApp");
+	layer->SendFile(this->_selectedFilePath, FileReceiveHandler, this);
+}
+
+
+
+void Cipc2019Dlg::FileReceiveHandler(void* pParam, unsigned int fragmentsReceived, unsigned int totalFragments)
+{
+	Cipc2019Dlg* thisPtr = (Cipc2019Dlg*)pParam;
+	if (fragmentsReceived == 0)
+	{
+		thisPtr->m_ListChat.AddString(_T("File receive start"));
+	}
+	else if (fragmentsReceived == totalFragments)
+	{
+		thisPtr->m_ListChat.AddString(_T("File receive end"));
+	}
+}
+
+void Cipc2019Dlg::FileSendHandler(void* pParam, unsigned int fragmentsSent, unsigned totalFragments)
+{
+	Cipc2019Dlg* thisPtr = (Cipc2019Dlg*)pParam;
+	thisPtr->_progressBar.SetRange(0, 65535);
+	double percent = (double)fragmentsSent / totalFragments;
+	short pos = 65535 * percent;
+	thisPtr->_progressBar.SetPos(pos);
 }

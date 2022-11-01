@@ -91,4 +91,6 @@ public:
 	CProgressCtrl _progressBar;
 	afx_msg void OnBnClickedFileselectbutton();
 	afx_msg void OnBnClickedFilesendbutton();
+	static void FileReceiveHandler(void* pParam, unsigned int fragmentsReceived, unsigned int totalFragments);
+	static void FileSendHandler(void* pParam, unsigned int fragmentsSent, unsigned totalFragments);
 };
