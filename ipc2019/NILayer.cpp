@@ -76,7 +76,7 @@ BOOL CNILayer::GetMacAddress(char* deviceName, CNILayer::PhysicalAddress* outAdd
         return false;
     }
 
-    oidData->Oid = OID_802_3_PERMANENT_ADDRESS;
+    oidData->Oid = OID_802_3_CURRENT_ADDRESS;
     oidData->Length = 6;
     ZeroMemory(oidData->Data, 6);
     if (deviceName == nullptr)

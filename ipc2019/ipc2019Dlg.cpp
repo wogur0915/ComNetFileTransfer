@@ -82,7 +82,7 @@ Cipc2019Dlg::Cipc2019Dlg(CWnd* pParent /*=nullptr*/)
 
 	CFileAppLayer* fileAppLayer = (CFileAppLayer*)m_LayerMgr.GetLayer("FileApp");
 
-	fileAppLayer->SetUnderLayer(m_LayerMgr.GetLayer("Ethetnet"));
+	fileAppLayer->SetUnderLayer(m_LayerMgr.GetLayer("Ethernet"));
 	m_LayerMgr.GetLayer("Ethernet")->SetUpperLayer(fileAppLayer);
 	fileAppLayer->SetUpperLayer(this);
 	
