@@ -442,7 +442,7 @@ void Cipc2019Dlg::OnBnClickedFilesendbutton()
 void Cipc2019Dlg::FileReceiveHandler(void* pParam, unsigned int fragmentsReceived, unsigned int totalFragments)
 {
 	Cipc2019Dlg* thisPtr = (Cipc2019Dlg*)pParam;
-	if (fragmentsReceived == 0)
+	if (fragmentsReceived == 1)
 	{
 		thisPtr->m_ListChat.AddString(_T("File receive start"));
 	}
