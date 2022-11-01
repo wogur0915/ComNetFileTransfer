@@ -59,7 +59,7 @@ UINT CFileAppLayer::SendFileInternal(LPVOID pParam)
 
 	do
 	{
-		TRACE("Sending file header (fragment #0)");
+		TRACE("Sending file header (fragment #0)\n");
 		thisPtr->SendMetadata(fileName, fragmentCount);
 	} while (!thisPtr->WaitForAck(0));
 
@@ -69,7 +69,7 @@ UINT CFileAppLayer::SendFileInternal(LPVOID pParam)
 	{
 		do
 		{
-			TRACE("Sending file part %d out of %d", i, fragmentCount);
+			TRACE("Sending file part %d out of %d\n", i, fragmentCount);
 			thisPtr->SendPart(i, file, false);
 		} while (!thisPtr->WaitForAck(i));
 		thisPtr->_sendingHandler(thisPtr->_receiveHandlerParam, i, fragmentCount);
@@ -77,7 +77,7 @@ UINT CFileAppLayer::SendFileInternal(LPVOID pParam)
 
 	do
 	{
-		TRACE("Sending final fragment");
+		TRACE("Sending final fragment\n");
 		thisPtr->SendPart(fragmentCount - 1, file, true);
 	} while (!thisPtr->WaitForAck(fragmentCount - 1));
 	thisPtr->_sendingHandler(thisPtr->_receiveHandlerParam, fragmentCount, fragmentCount);
@@ -129,7 +129,7 @@ bool CFileAppLayer::WaitForAck(unsigned int sequenceNumber)
 	{
 		if (_fileSending.lastAck == sequenceNumber)
 		{
-			TRACE("ACK for %d processed", sequenceNumber);
+			TRACE("ACK for %d processed\n", sequenceNumber);
 			return true;
 		}
 		Sleep(1);
@@ -148,17 +148,17 @@ BOOL CFileAppLayer::Receive(unsigned char* payload)
 	char* data = message->data;
 	if (message->messageType == MessageType::ACK)
 	{
-		TRACE("Received ack for %d", message->sequenceNumber);
+		TRACE("Received ack for %d\n", message->sequenceNumber);
 		_fileSending.lastAck = message->sequenceNumber;
 		return true;
 	}
 	
-	TRACE("Sending ACK for %d", message->sequenceNumber);
+	TRACE("Sending ACK for %d\n", message->sequenceNumber);
 	SendAck(message->sequenceNumber);
 
 	if (message->messageType == MessageType::METADATA)
 	{
-		TRACE("Received metadata");
+		TRACE("Received metadata\n");
 		// Prepare to receive file
 		_fileReceiving.fragmentsReceived = 1;
 		unsigned int fragmentCount = *(unsigned int*)data;
@@ -170,7 +170,7 @@ BOOL CFileAppLayer::Receive(unsigned char* payload)
 		CFileException ex;
 		if (!_fileReceiving.receivedFile.Open("tempfile_downloading", CFile::modeCreate | CFile::modeWrite | CFile::typeBinary, &ex))
 		{
-			TRACE("Failed to create file");
+			TRACE("Failed to create file\n");
 		}
 
 		_receivedHandler(_receiveHandlerParam, 1, fragmentCount);
@@ -183,7 +183,7 @@ BOOL CFileAppLayer::Receive(unsigned char* payload)
 		return false;
 	}
 
-	TRACE("writing segment %d to file", message->sequenceNumber);
+	TRACE("writing segment %d to file\n", message->sequenceNumber);
 	// here, the file must be some sort of fragment
 	LONGLONG position = static_cast<LONGLONG>(message->sequenceNumber - 1) * FILE_APP_MAX_DATA_SIZE;
 	_fileReceiving.receivedFile.Seek(position, CFile::begin);
@@ -192,7 +192,7 @@ BOOL CFileAppLayer::Receive(unsigned char* payload)
 
 	if (message->messageType == MessageType::FINALFRAGMENT)
 	{
-		TRACE("Last segment received, closing file");
+		TRACE("Last segment received, closing file\n");
 		// Close file
 		_fileReceiving.receivedFile.Close();
 		CFile::Rename("tempfile_downloading", _fileReceiving.name);
