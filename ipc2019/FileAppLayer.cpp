@@ -24,7 +24,8 @@ void CFileAppLayer::SetFileReceiveHandler(CFileAppLayer::ProgressUpdateHandler h
 // Internal method that just passes down the raw data to the next layer.
 BOOL CFileAppLayer::Send(unsigned char* data, size_t len)
 {
-	GetUnderLayer()->Send(data, len);
+	auto ethernet = (CEthernetLayer*)GetUnderLayer();
+	ethernet->Send(data, len, FILE_TYPE);
 	_fileSending.lastAck = 0xFFFFFFFF;
 	return TRUE;
 }
