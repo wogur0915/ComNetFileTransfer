@@ -58,7 +58,7 @@ UINT CFileAppLayer::SendFileInternal(LPVOID pParam)
 	do
 	{
 		thisPtr->SendMetadata(fileName, fragmentCount);
-	} while (thisPtr->WaitForAck(0));
+	} while (!thisPtr->WaitForAck(0));
 
 	thisPtr->_receivedHandler(thisPtr->_handlerParam, 1, fragmentCount);
 
@@ -67,7 +67,7 @@ UINT CFileAppLayer::SendFileInternal(LPVOID pParam)
 		do
 		{
 			thisPtr->SendPart(i, file);
-		} while (thisPtr->WaitForAck(i));
+		} while (!thisPtr->WaitForAck(i));
 		thisPtr->_receivedHandler(thisPtr->_handlerParam, i, fragmentCount);
 	}
 	file.Close();
@@ -134,7 +134,7 @@ BOOL CFileAppLayer::Receive(unsigned char* payload)
 	char* data = message->data;
 	if (message->messageType == MessageType::ACK)
 	{
-		_fileSending.lastAck = *(unsigned int*)data;
+		_fileSending.lastAck = message->sequenceNumber;
 		return true;
 	}
 	
@@ -150,7 +150,11 @@ BOOL CFileAppLayer::Receive(unsigned char* payload)
 		_fileReceiving.totalFragmentsToReceive = fragmentCount;
 		_fileReceiving.name.Format("%s", data);
 		data += len;
-		_fileReceiving.receivedFile.Open("tempfile_downloading", CFile::modeCreate | CFile::typeBinary);
+		CFileException ex;
+		if (!_fileReceiving.receivedFile.Open("tempfile_downloading", CFile::modeCreate | CFile::modeWrite | CFile::typeBinary, &ex))
+		{
+			TRACE("Failed to create file");
+		}
 		return true;
 	}
 
